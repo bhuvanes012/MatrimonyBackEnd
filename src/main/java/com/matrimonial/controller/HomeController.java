@@ -3,6 +3,7 @@ package com.matrimonial.controller;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,6 +16,7 @@ import com.matrimonial.service.UserDetailService;
 import ch.qos.logback.core.model.Model;
 
 @RestController
+@CrossOrigin(origins = "http://127.0.0.1:8081")
 @RequestMapping("/login")
 public class HomeController 
 {

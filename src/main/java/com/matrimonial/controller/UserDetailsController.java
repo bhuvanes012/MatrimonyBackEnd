@@ -6,6 +6,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.matrimonial.constant.Constant;
 import com.matrimonial.model.ApiResponse;
 import com.matrimonial.model.UserProfilePO;
 import com.matrimonial.service.UserDetailService;
@@ -20,6 +21,8 @@ public class UserDetailsController {
 	UserDetailService userService;
 	@PostMapping("/register")
 	public ApiResponse registerUser(@RequestBody UserProfilePO details,  Model model) {
+		
+		 
 		ApiResponse res = new ApiResponse();
         System.out.println(details);
 		userService.registerUserProfile(details,res);
