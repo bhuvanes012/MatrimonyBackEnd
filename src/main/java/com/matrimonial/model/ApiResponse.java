@@ -2,6 +2,7 @@ package com.matrimonial.model;
 public class ApiResponse {
     private String message;
     private Object responseData; // Change to Object instead of a generic type
+    private boolean isStatus;
 
     // Constructors
     public ApiResponse() {}
@@ -27,4 +28,13 @@ public class ApiResponse {
     public void setResponseData(Object responseData) {
         this.responseData = responseData;
     }
+
+	public boolean isStatus() {
+		return isStatus;
+	}
+
+	public void setStatus(boolean isStatus) {
+		this.isStatus = isStatus;
+	}
+    
 }
