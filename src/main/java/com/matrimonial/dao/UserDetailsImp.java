@@ -1,14 +1,19 @@
 package com.matrimonial.dao;
 
+import java.io.File;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Repository;
 
+import com.matrimonial.constant.Constant;
 import com.matrimonial.model.ApiResponse;
 import com.matrimonial.model.TestDBPO;
 import com.matrimonial.model.UserProfilePO;
 import com.matrimonial.service.UserDetailService;
+import com.matrimonial.utility.ImageConvertor;
 
 import jakarta.persistence.EntityManager;
 import jakarta.transaction.Transactional;
@@ -38,12 +43,19 @@ public class UserDetailsImp implements UserDetailService {
 	public void registerUserProfile(UserProfilePO profile, ApiResponse api) {
 
 		try {
-			if (validatePofileDetails(profile, api)) {
+			// if (validatePofileDetails(profile, api)) {
+			boolean folderStatus = createprofileFolderIfNotExist(api);
+			if (true && folderStatus) {
+
+				Map<String, String> profileData = removeImage(profile);
 
 				userDAO.persist(profile);
+
+				convertBase64StringToImg(profileData, profile);
+				userDAO.merge(profile);
 				api.setStatus(true);
 				api.setMessage("Profile created sucessfully");
-			}else{
+			} else {
 				api.setStatus(false);
 			}
 		} catch (Exception e) {
@@ -54,193 +66,289 @@ public class UserDetailsImp implements UserDetailService {
 
 	}
 
-	private boolean validatePofileDetails(UserProfilePO profile, ApiResponse api) {
-		try {
-		if (profile.getName() == null || profile.getName().isEmpty()) {
-			api.setMessage("Name is required");
-			return false;
-		}
-		if (profile.getDob() == null || profile.getDob().isEmpty()) {
-			api.setMessage("Date of birth is required");
-			return false;
-		}
-		if (profile.getGender() == null || profile.getGender().isEmpty()) {
-			api.setMessage("Gender is required");
-			return false;
-		}
-		if (profile.getReligion() == null || profile.getReligion().isEmpty()) {
-			api.setMessage("Religion is required");
-			return false;
-		}
-		// if religion is other than other religion field should not empty
-		if (profile.getOtherReligion() == null || profile.getOtherReligion().isEmpty()) {
-			if (profile.getReligion().equalsIgnoreCase("other")) {
-				api.setMessage("Other religion is required");
-				return false;
+	private Map<String, String> removeImage(UserProfilePO profile) {
+		Map<String, String> profileData = new HashMap<String, String>();
+		profileData.put("ProfileImg", profile.getProfileImage());
+		profile.setProfileImage("");
+		profileData.put("ProfileImg1", profile.getProfileImage1());
+		profile.setProfileImage1("");
+		profileData.put("ProfileImg2", profile.getProfileImage2());
+		profile.setProfileImage2("");
+		profileData.put("ProfileImg3", profile.getProfileImage3());
+		profile.setProfileImage3("");
+		profileData.put("HoroscopeImage", profile.getHoroscopeImage());
+		profile.setHoroscopeImage("");
+		return profileData;
+
+	}
+
+	private void convertBase64StringToImg(Map<String, String> profileData, UserProfilePO profile) {
+		String imgPath = Constant.APACHE_HOST_PATH + "/" + Constant.PROFILE_FOLDER_NAME;
+
+		for (Map.Entry<String, String> data : profileData.entrySet()) {
+
+			boolean imgStatus = ImageConvertor.convertBase64ToImage(data.getValue(),
+					imgPath + "/" + data.getKey() + "_" + profile.getId() + ".png");
+
+			if (imgStatus) {
+				if (data.getKey().equalsIgnoreCase("ProfileImg")) {
+
+					profile.setProfileImage(
+							Constant.PROFILE_FOLDER_NAME + "/" + data.getKey() + "_" + profile.getId() + ".png");
+				}
+				if (data.getKey().equalsIgnoreCase("ProfileImg1")) {
+
+					profile.setProfileImage1(
+							Constant.PROFILE_FOLDER_NAME + "/" + data.getKey() + "_" + profile.getId() + ".png");
+				}
+				if (data.getKey().equalsIgnoreCase("ProfileImg2")) {
+
+					profile.setProfileImage2(
+							Constant.PROFILE_FOLDER_NAME + "/" + data.getKey() + "_" + profile.getId() + ".png");
+				}
+				if (data.getKey().equalsIgnoreCase("ProfileImg3")) {
+
+					profile.setProfileImage3(
+							Constant.PROFILE_FOLDER_NAME + "/" + data.getKey() + "_" + profile.getId() + ".png");
+				}
+				if (data.getKey().equalsIgnoreCase("HoroscopeImage")) {
+
+					profile.setHoroscopeImage(
+							Constant.PROFILE_FOLDER_NAME + "/" + data.getKey() + "_" + profile.getId() + ".png");
+				}
 			}
 
 		}
-		if (profile.getCity() == null || profile.getCity().isEmpty()) {
-			api.setMessage("City is required");
-			return false;
+
+	}
+
+	private boolean createprofileFolderIfNotExist(ApiResponse api) {
+		try {
+			File folder = new File(Constant.APACHE_HOST_PATH + File.separator + Constant.PROFILE_FOLDER_NAME);
+
+			if (!folder.exists()) {
+				try {
+					boolean created = folder.mkdirs();
+					if (created) {
+						System.out.println("Folder created successfully at: " + folder.getPath());
+					} else {
+						System.out.println("Failed to create folder due to an unknown issue.");
+					}
+				} catch (SecurityException e) {
+					System.out.println("Failed to create folder due to a security exception: " + e.getMessage());
+				}
+			} else {
+				System.out.println("Folder already exists at: " + folder.getPath());
+			}
+			return true;
+		} catch (Exception e) {
+			api.setMessage("while creating the profile folder getting error : " + e.getMessage());
 		}
-		if (profile.getState() == null || profile.getState().isEmpty()) {
-			api.setMessage("State is required");
-			return false;
-		}
-		if (profile.getCountry() == null || profile.getCountry().isEmpty()) {
-			api.setMessage("Country is required");
-			return false;
-		}
-		if (profile.getMaritalStatus() == null || profile.getMaritalStatus().isEmpty()) {
-			api.setMessage("Marital status is required");
-			return false;
-		}
-		if (profile.getChildrenStatus() == null || profile.getChildrenStatus().isEmpty()) {
-			api.setMessage("Children status is required");
-			return false;
-		}
-		if (profile.getDegree() == null || profile.getDegree().isEmpty()) {
-			api.setMessage("Degree is required");
-			return false;
-		}
-		if (profile.getOccupation() == null || profile.getOccupation().isEmpty()) {
-			api.setMessage("Occupation is required");
-			return false;
-		}
-		if (profile.getJobTitle() == null || profile.getJobTitle().isEmpty()) {
-			api.setMessage("Job title is required");
-			return false;
-		}
-		if (profile.getAnnualIncome() == null || profile.getAnnualIncome().isEmpty()) {
-			api.setMessage("Annual income is required");
-			return false;
-		}
-		if (profile.getJobLocation() == null || profile.getJobLocation().isEmpty()) {
-			api.setMessage("Job location is required");
-			return false;
-		}
-		if (profile.getCompanyName() == null || profile.getCompanyName().isEmpty()) {
-			api.setMessage("Company name is required");
-			return false;
-		}
-		if (profile.getFamilyType() == null || profile.getFamilyType().isEmpty()) {
-			api.setMessage("Family type is required");
-			return false;
-		}
-		if (profile.getFamilyCity() == null || profile.getFamilyCity().isEmpty()) {
-			api.setMessage("Family city is required");
-			return false;
-		}
-		if (profile.getFamilyDetails() == null || profile.getFamilyDetails().isEmpty()) {
-			api.setMessage("Family details are required");
-			return false;
-		}
-		if (profile.getCaste() == null || profile.getCaste().isEmpty()) {
-			api.setMessage("Caste is required");
-			return false;
-		}
-		if (profile.getGothram() == null || profile.getGothram().isEmpty()) {
-			api.setMessage("Gothram is required");
-			return false;
-		}
-		if (profile.getDosham() == null || profile.getDosham().isEmpty()) {
-			api.setMessage("Dosham information is required");
-			return false;
-		}
-		if (profile.getMotherTongue() == null || profile.getMotherTongue().isEmpty()) {
-			api.setMessage("Mother tongue is required");
-			return false;
-		}
-		if (profile.getHoroscopeImage() == null || profile.getHoroscopeImage().isEmpty()) {
-			api.setMessage("Horoscope image is required");
-			return false;
-		}
-		if (profile.getRasi() == null || profile.getRasi().isEmpty()) {
-			api.setMessage("Rasi is required");
-			return false;
-		}
-		if (profile.getNakshatram() == null || profile.getNakshatram().isEmpty()) {
-			api.setMessage("Nakshatram is required");
-			return false;
-		}
-		if (profile.getTimeOfBirth() == null || profile.getTimeOfBirth().isEmpty()) {
-			api.setMessage("Time of birth is required");
-			return false;
-		}
-		if (profile.getPlaceOfBirth() == null || profile.getPlaceOfBirth().isEmpty()) {
-			api.setMessage("Place of birth is required");
-			return false;
-		}
-		if (profile.getEmail() == null || profile.getEmail().isEmpty()) {
-			api.setMessage("Email is required");
-			return false;
-		}
-		if (profile.getContactPerson() == null || profile.getContactPerson().isEmpty()) {
-			api.setMessage("Contact person is required");
-			return false;
-		}
-		if (profile.getMobile() == null || profile.getMobile().isEmpty()) {
-			api.setMessage("Mobile number is required");
-			return false;
-		}
-		if (profile.getAltMobile() == null || profile.getAltMobile().isEmpty()) {
-			api.setMessage("Alternate mobile is required");
-			return false;
-		}
-		if (profile.getHeight() == null || profile.getHeight().isEmpty()) {
-			api.setMessage("Height is required");
-			return false;
-		}
-		if (profile.getComplexion() == null || profile.getComplexion().isEmpty()) {
-			api.setMessage("Complexion is required");
-			return false;
-		}
-		if (profile.getWeight() == null || profile.getWeight().isEmpty()) {
-			api.setMessage("Weight is required");
-			return false;
-		}
-		if (profile.getPhysicallyChallenged() == null || profile.getPhysicallyChallenged().isEmpty()) {
-			api.setMessage("Physically challenged information is required");
-			return false;
-		}
-		if (profile.getFoodType() == null || profile.getFoodType().isEmpty()) {
-			api.setMessage("Food type is required");
-			return false;
-		}
-		if (profile.getDrinking() == null || profile.getDrinking().isEmpty()) {
-			api.setMessage("Drinking habits are required");
-			return false;
-		}
-		if (profile.getSmoking() == null || profile.getSmoking().isEmpty()) {
-			api.setMessage("Smoking habits are required");
-			return false;
-		}
-		if (profile.getHobbies() == null || profile.getHobbies().isEmpty()) {
-			api.setMessage("Hobbies are required");
-			return false;
-		}
-		if (profile.getSocialMediaDetails() == null || profile.getSocialMediaDetails().isEmpty()) {
-			api.setMessage("Social media details are required");
-			return false;
-		}
-		if (profile.getLanguagesKnown() == null || profile.getLanguagesKnown().isEmpty()) {
-			api.setMessage("Languages known are required");
-			return false;
-		}
-		if (profile.getAboutMe() == null || profile.getAboutMe().isEmpty()) {
-			api.setMessage("About me section is required");
-			return false;
-		}
-		}catch (Exception e) {
-			api.setMessage("While validate the profile details getting error :" +e.getMessage());
+		return false;
+
+	}
+
+	private boolean validatePofileDetails(UserProfilePO profile, ApiResponse api) {
+		try {
+			if (profile.getName() == null || profile.getName().isEmpty()) {
+				api.setMessage("Name is required");
+				return false;
+			}
+			if (profile.getDob() == null || profile.getDob().isEmpty()) {
+				api.setMessage("Date of birth is required");
+				return false;
+			}
+			if (profile.getGender() == null || profile.getGender().isEmpty()) {
+				api.setMessage("Gender is required");
+				return false;
+			}
+			if (profile.getReligion() == null || profile.getReligion().isEmpty()) {
+				api.setMessage("Religion is required");
+				return false;
+			}
+			// if religion is other than other religion field should not empty
+			if (profile.getOtherReligion() == null || profile.getOtherReligion().isEmpty()) {
+				if (profile.getReligion().equalsIgnoreCase("other")) {
+					api.setMessage("Other religion is required");
+					return false;
+				}
+
+			}
+			if (profile.getCity() == null || profile.getCity().isEmpty()) {
+				api.setMessage("City is required");
+				return false;
+			}
+			if (profile.getState() == null || profile.getState().isEmpty()) {
+				api.setMessage("State is required");
+				return false;
+			}
+			if (profile.getCountry() == null || profile.getCountry().isEmpty()) {
+				api.setMessage("Country is required");
+				return false;
+			}
+			if (profile.getMaritalStatus() == null || profile.getMaritalStatus().isEmpty()) {
+				api.setMessage("Marital status is required");
+				return false;
+			}
+			if (profile.getChildrenStatus() == null || profile.getChildrenStatus().isEmpty()) {
+				api.setMessage("Children status is required");
+				return false;
+			}
+			if (profile.getDegree() == null || profile.getDegree().isEmpty()) {
+				api.setMessage("Degree is required");
+				return false;
+			}
+			if (profile.getOccupation() == null || profile.getOccupation().isEmpty()) {
+				api.setMessage("Occupation is required");
+				return false;
+			}
+			if (profile.getJobTitle() == null || profile.getJobTitle().isEmpty()) {
+				api.setMessage("Job title is required");
+				return false;
+			}
+			if (profile.getAnnualIncome() == null || profile.getAnnualIncome().isEmpty()) {
+				api.setMessage("Annual income is required");
+				return false;
+			}
+			if (profile.getJobLocation() == null || profile.getJobLocation().isEmpty()) {
+				api.setMessage("Job location is required");
+				return false;
+			}
+			if (profile.getCompanyName() == null || profile.getCompanyName().isEmpty()) {
+				api.setMessage("Company name is required");
+				return false;
+			}
+			if (profile.getFamilyType() == null || profile.getFamilyType().isEmpty()) {
+				api.setMessage("Family type is required");
+				return false;
+			}
+			if (profile.getFamilyCity() == null || profile.getFamilyCity().isEmpty()) {
+				api.setMessage("Family city is required");
+				return false;
+			}
+			if (profile.getFamilyDetails() == null || profile.getFamilyDetails().isEmpty()) {
+				api.setMessage("Family details are required");
+				return false;
+			}
+			if (profile.getCaste() == null || profile.getCaste().isEmpty()) {
+				api.setMessage("Caste is required");
+				return false;
+			}
+			if (profile.getGothram() == null || profile.getGothram().isEmpty()) {
+				api.setMessage("Gothram is required");
+				return false;
+			}
+			if (profile.getDosham() == null || profile.getDosham().isEmpty()) {
+				api.setMessage("Dosham information is required");
+				return false;
+			}
+			if (profile.getMotherTongue() == null || profile.getMotherTongue().isEmpty()) {
+				api.setMessage("Mother tongue is required");
+				return false;
+			}
+			if (profile.getHoroscopeImage() == null || profile.getHoroscopeImage().isEmpty()) {
+				api.setMessage("Horoscope image is required");
+				return false;
+			}
+			if (profile.getRasi() == null || profile.getRasi().isEmpty()) {
+				api.setMessage("Rasi is required");
+				return false;
+			}
+			if (profile.getNakshatram() == null || profile.getNakshatram().isEmpty()) {
+				api.setMessage("Nakshatram is required");
+				return false;
+			}
+			if (profile.getTimeOfBirth() == null || profile.getTimeOfBirth().isEmpty()) {
+				api.setMessage("Time of birth is required");
+				return false;
+			}
+			if (profile.getPlaceOfBirth() == null || profile.getPlaceOfBirth().isEmpty()) {
+				api.setMessage("Place of birth is required");
+				return false;
+			}
+			if (profile.getEmail() == null || profile.getEmail().isEmpty()) {
+				api.setMessage("Email is required");
+				return false;
+			}
+			if (profile.getContactPerson() == null || profile.getContactPerson().isEmpty()) {
+				api.setMessage("Contact person is required");
+				return false;
+			}
+			if (profile.getMobile() == null || profile.getMobile().isEmpty()) {
+				api.setMessage("Mobile number is required");
+				return false;
+			}
+			if (profile.getAltMobile() == null || profile.getAltMobile().isEmpty()) {
+				api.setMessage("Alternate mobile is required");
+				return false;
+			}
+			if (profile.getHeight() == null || profile.getHeight().isEmpty()) {
+				api.setMessage("Height is required");
+				return false;
+			}
+			if (profile.getComplexion() == null || profile.getComplexion().isEmpty()) {
+				api.setMessage("Complexion is required");
+				return false;
+			}
+			if (profile.getWeight() == null || profile.getWeight().isEmpty()) {
+				api.setMessage("Weight is required");
+				return false;
+			}
+			if (profile.getPhysicallyChallenged() == null || profile.getPhysicallyChallenged().isEmpty()) {
+				api.setMessage("Physically challenged information is required");
+				return false;
+			}
+			if (profile.getFoodType() == null || profile.getFoodType().isEmpty()) {
+				api.setMessage("Food type is required");
+				return false;
+			}
+			if (profile.getDrinking() == null || profile.getDrinking().isEmpty()) {
+				api.setMessage("Drinking habits are required");
+				return false;
+			}
+			if (profile.getSmoking() == null || profile.getSmoking().isEmpty()) {
+				api.setMessage("Smoking habits are required");
+				return false;
+			}
+			if (profile.getHobbies() == null || profile.getHobbies().isEmpty()) {
+				api.setMessage("Hobbies are required");
+				return false;
+			}
+			if (profile.getSocialMediaDetails() == null || profile.getSocialMediaDetails().isEmpty()) {
+				api.setMessage("Social media details are required");
+				return false;
+			}
+			if (profile.getLanguagesKnown() == null || profile.getLanguagesKnown().isEmpty()) {
+				api.setMessage("Languages known are required");
+				return false;
+			}
+			if (profile.getAboutMe() == null || profile.getAboutMe().isEmpty()) {
+				api.setMessage("About me section is required");
+				return false;
+			}
+		} catch (Exception e) {
+			api.setMessage("While validate the profile details getting error :" + e.getMessage());
 			e.printStackTrace();
 			return false;
-			
+
 		}
 
 		// All validations passed
 		return true;
+	}
+
+	@Override
+	public void getAllUserProfile(ApiResponse res) {
+		try {
+			List<UserProfilePO> data = userDAO.createQuery("from UserProfilePO").getResultList();
+
+			res.setStatus(true);
+			res.setMessage("sucessfully retrive data ");
+			res.setResponseData(data);
+		} catch (Exception e) {
+			res.setMessage("getting error while retrive data " + e.getMessage());
+		}
+
 	}
 
 }

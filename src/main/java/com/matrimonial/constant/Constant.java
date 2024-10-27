@@ -1,21 +1,6 @@
 package com.matrimonial.constant;
 
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
-
-@Component
 public class Constant {
-	 @Value("${server.port}")
-	    private static String appPort;
-
-	public static String getAppPort() {
-		return appPort;
-	}
-
-	public void setAppPort(String appPort) {
-		this.appPort = appPort;
-	}
-	 
-	 
-	 
+	public static String APACHE_HOST_PATH = "/Applications/XAMPP/xamppfiles/htdocs";
+	public static String PROFILE_FOLDER_NAME = "UserProfile";
 }

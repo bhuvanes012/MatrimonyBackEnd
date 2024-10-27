@@ -16,6 +16,8 @@ public interface UserDetailService {
 	void insertDate(TestDBPO table);
 
 	void registerUserProfile(UserProfilePO profile, ApiResponse res);
+
+	void getAllUserProfile(ApiResponse res);
 	
 
 }

@@ -1,6 +1,7 @@
 package com.matrimonial.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -27,6 +28,15 @@ public class UserDetailsController {
         System.out.println(details);
 		userService.registerUserProfile(details,res);
 		return res;
+	}
+	
+	@GetMapping("allUser")
+	public ApiResponse getAllUser(Model model) {
+		
+		ApiResponse res = new ApiResponse();
+		userService.getAllUserProfile(res);
+        return res;
+		
 	}
 
 }
