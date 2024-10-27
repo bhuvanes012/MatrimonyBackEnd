@@ -1,13 +1,13 @@
 package com.matrimonial.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.matrimonial.constant.Constant;
 import com.matrimonial.model.ApiResponse;
 import com.matrimonial.model.UserProfilePO;
 import com.matrimonial.service.UserDetailService;
@@ -15,6 +15,7 @@ import com.matrimonial.service.UserDetailService;
 import ch.qos.logback.core.model.Model;
 
 @RestController
+@CrossOrigin(origins = "http://127.0.0.1:8100")
 @RequestMapping("/user")
 public class UserDetailsController {
 	@Autowired
